@@ -161,6 +161,7 @@ RangeEncoder::RangeEncoder(const VkImageSubresourceRange& full_range, const Aspe
       mip_size_(full_range.layerCount),
       aspect_size_(mip_size_ * full_range.levelCount),
       aspect_bits_(param->AspectBits()),
+      blit_offset_({0, 0, 0}),
       mask_index_function_(param->MaskToIndexFunction()),
       encode_function_(nullptr),
       decode_function_(nullptr) {

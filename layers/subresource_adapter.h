@@ -83,6 +83,7 @@ class RangeEncoder {
           mip_size_(0),
           aspect_size_(0),
           aspect_bits_(nullptr),
+          blit_offset_({0,0,0}),
           mask_index_function_(nullptr),
           encode_function_(nullptr),
           decode_function_(nullptr),
@@ -94,6 +95,7 @@ class RangeEncoder {
     // Create the encoder suitable to the full range (aspect mask *must* be canonical)
     RangeEncoder(const VkImageSubresourceRange& full_range)
         : RangeEncoder(full_range, AspectParameters::Get(full_range.aspectMask)) {}
+    RangeEncoder(const VkImageSubresourceRange& full_range, const VkOffset3D& blit_offset);
     RangeEncoder(const RangeEncoder& from);
 
     inline bool InRange(const VkImageSubresource& subres) const {
@@ -111,8 +113,10 @@ class RangeEncoder {
 
     inline IndexType Encode(const Subresource& pos) const { return (this->*(encode_function_))(pos); }
     inline IndexType Encode(const VkImageSubresource& subres) const { return Encode(Subresource(*this, subres)); }
+    inline IndexType Encode(const VkImageSubresource& subres, const VkOffset3D& blit_offset) const;
 
     Subresource Decode(const IndexType& index) const { return (this->*decode_function_)(index); }
+    void Decode(const IndexType& index, Subresource& subres, const VkOffset3D& blit_offset) const;
 
     inline Subresource BeginSubresource(const VkImageSubresourceRange& range) const {
         const auto aspect_index = LowerBoundFromMask(range.aspectMask);
@@ -226,6 +230,7 @@ class RangeEncoder {
     const size_t mip_size_;
     const size_t aspect_size_;
     const VkImageAspectFlagBits* const aspect_bits_;
+    VkOffset3D blit_offset_;
     uint32_t (*const mask_index_function_)(VkImageAspectFlags);
     IndexType (RangeEncoder::*encode_function_)(const Subresource&) const;
     Subresource (RangeEncoder::*decode_function_)(const IndexType&) const;
