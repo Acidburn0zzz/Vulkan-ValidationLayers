@@ -83,19 +83,20 @@ class RangeEncoder {
           mip_size_(0),
           aspect_size_(0),
           aspect_bits_(nullptr),
-          blit_offset_({0,0,0}),
           mask_index_function_(nullptr),
           encode_function_(nullptr),
           decode_function_(nullptr),
           lower_bound_function_(nullptr),
           lower_bound_with_start_function_(nullptr),
-          aspect_base_{0, 0, 0} {}
+          aspect_base_{0, 0, 0},
+          blit_offset_{} {}
 
-    RangeEncoder(const VkImageSubresourceRange& full_range, const AspectParameters* param);
+    RangeEncoder(const VkImageSubresourceRange& full_range, const AspectParameters* param, const VkOffset3D& blit_offset = {});
     // Create the encoder suitable to the full range (aspect mask *must* be canonical)
     RangeEncoder(const VkImageSubresourceRange& full_range)
         : RangeEncoder(full_range, AspectParameters::Get(full_range.aspectMask)) {}
-    RangeEncoder(const VkImageSubresourceRange& full_range, const VkOffset3D& blit_offset);
+    RangeEncoder(const VkImageSubresourceRange& full_range, const VkOffset3D& blit_offset)
+        : RangeEncoder(full_range, AspectParameters::Get(full_range.aspectMask), blit_offset) {}
     RangeEncoder(const RangeEncoder& from);
 
     inline bool InRange(const VkImageSubresource& subres) const {
@@ -113,10 +114,10 @@ class RangeEncoder {
 
     inline IndexType Encode(const Subresource& pos) const { return (this->*(encode_function_))(pos); }
     inline IndexType Encode(const VkImageSubresource& subres) const { return Encode(Subresource(*this, subres)); }
-    inline IndexType Encode(const VkImageSubresource& subres, const VkOffset3D& blit_offset) const;
+    inline IndexType Encode(const VkImageSubresource& subres, const VkOffset3D& blit_offset) const {}
 
     Subresource Decode(const IndexType& index) const { return (this->*decode_function_)(index); }
-    void Decode(const IndexType& index, Subresource& subres, const VkOffset3D& blit_offset) const;
+    void Decode(const IndexType& index, Subresource& subres, const VkOffset3D& blit_offset) const {}
 
     inline Subresource BeginSubresource(const VkImageSubresourceRange& range) const {
         const auto aspect_index = LowerBoundFromMask(range.aspectMask);

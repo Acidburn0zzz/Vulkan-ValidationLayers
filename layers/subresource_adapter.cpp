@@ -155,16 +155,16 @@ void RangeEncoder::PopulateFunctionPointers() {
     }
 }
 
-RangeEncoder::RangeEncoder(const VkImageSubresourceRange& full_range, const AspectParameters* param)
+RangeEncoder::RangeEncoder(const VkImageSubresourceRange& full_range, const AspectParameters* param, const VkOffset3D& blit_offset)
     : full_range_(full_range),
       limits_(param->AspectMask(), full_range.levelCount, full_range.layerCount, param->AspectCount()),
       mip_size_(full_range.layerCount),
       aspect_size_(mip_size_ * full_range.levelCount),
       aspect_bits_(param->AspectBits()),
-      blit_offset_({0, 0, 0}),
       mask_index_function_(param->MaskToIndexFunction()),
       encode_function_(nullptr),
-      decode_function_(nullptr) {
+      decode_function_(nullptr),
+      blit_offset_(blit_offset) {
     // Only valid to create an encoder for a *whole* image (i.e. base must be zero, and the specified limits_.selected_aspects
     // *must* be equal to the traits aspect mask. (Encoder range assumes zero bases)
     assert(full_range.aspectMask == limits_.aspectMask);
